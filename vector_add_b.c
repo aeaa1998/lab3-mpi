@@ -16,6 +16,8 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
 #define MIN_ELEMENTS 90000000
 // If it is set to true it wont ask for the size of the array
 #define DEBUG 1
@@ -35,6 +37,7 @@ double randfrom(double min, double max)
 /*---------------------------------------------------------------------*/
 int main(void)
 {
+    srand(time(NULL));
     int n;
     double *x, *y, *z;
 
@@ -64,13 +67,13 @@ int main(void)
  */
 void Read_n(int *n_p /* out */)
 {
-    printf("What's the order of the vectors?\n");
     if (DEBUG)
     {
         *n_p = MIN_ELEMENTS;
     }
     else
     {
+        printf("What's the order of the vectors?\n");
         scanf("%d", n_p);
     }
 

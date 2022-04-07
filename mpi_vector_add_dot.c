@@ -27,7 +27,7 @@
 #include <mpi.h>
 #include <time.h>
 
-#define MIN_ELEMENTS 90000000
+#define MIN_ELEMENTS 3000000
 // If it is set to true it wont ask for the size of the array
 #define DEBUG 1
 
@@ -41,20 +41,19 @@ void Read_vector(double local_a[], int local_n, int n, char vec_name[],
                  int my_rank, MPI_Comm comm);
 void Print_vector(double local_b[], int local_n, int n, char title[],
                   int my_rank, MPI_Comm comm);
-void Parallel_vector_sum(double local_x[], double local_y[],
-                         double local_z[], int local_n);
+double Parallel_vector_dot(double local_x[], double local_y[],
+                           int my_rank, int local_n);
 double randfrom(double min, double max)
 {
     double range = (max - min);
     double div = RAND_MAX / range;
-    return min + ((double)rand() / div);
+    return min + (rand() / div);
 }
 
 /*-------------------------------------------------------------------*/
 int main(void)
 {
     srand(time(NULL));
-
     int n, local_n;
     int comm_sz, my_rank;
     double *local_x, *local_y, *local_z;
@@ -72,12 +71,12 @@ int main(void)
     Allocate_vectors(&local_x, &local_y, &local_z, local_n, comm);
 
     Read_vector(local_x, local_n, n, "x", my_rank, comm);
-    // Print_vector(local_x, local_n, n, "x is", my_rank, comm);
+    Print_vector(local_x, local_n, n, "x is", my_rank, comm);
     Read_vector(local_y, local_n, n, "y", my_rank, comm);
-    // Print_vector(local_y, local_n, n, "y is", my_rank, comm);
+    Print_vector(local_y, local_n, n, "y is", my_rank, comm);
 
-    Parallel_vector_sum(local_x, local_y, local_z, local_n);
-    Print_vector(local_z, local_n, n, "The sum is", my_rank, comm);
+    Parallel_vector_dot(local_x, local_y, my_rank, local_n);
+    // Print_vector(local_z, local_n, n, "The sum is", my_rank, comm);
 
     free(local_x);
     free(local_y);
@@ -167,7 +166,7 @@ void Read_n(
     if (*n_p < MIN_ELEMENTS || *n_p % comm_sz != 0)
         local_ok = 0;
     Check_for_error(local_ok, fname,
-                    "n should be >= 90000000 and evenly divisible by comm_sz", comm);
+                    "n should be >= 300 and evenly divisible by comm_sz", comm);
     *local_n_p = *n_p / comm_sz;
 } /* Read_n */
 
@@ -243,7 +242,7 @@ void Read_vector(
                         comm);
         // printf("Enter the vector %s\n", vec_name);
         for (i = 0; i < n; i++)
-            a[i] = randfrom(1, 5);
+            a[i] = randfrom(1, 10);
         // scanf("%lf", &a[i]);
         MPI_Scatter(a, local_n, MPI_DOUBLE, local_a, local_n, MPI_DOUBLE, 0,
                     comm);
@@ -316,7 +315,7 @@ void Print_vector(
 } /* Print_vector */
 
 /*-------------------------------------------------------------------
- * Function:  Parallel_vector_sum
+ * Function:  Parallel_vector_dot
  * Purpose:   Add a vector that's been distributed among the processes
  * In args:   local_x:  local storage of one of the vectors being added
  *            local_y:  local storage for the second vector being added
@@ -324,14 +323,24 @@ void Print_vector(
  *                      and local_z
  * Out arg:   local_z:  local storage for the sum of the two vectors
  */
-void Parallel_vector_sum(
+double Parallel_vector_dot(
     double local_x[] /* in  */,
     double local_y[] /* in  */,
-    double local_z[] /* out */,
+    int my_rank,
     int local_n /* in  */)
 {
     int local_i;
 
+    double local_prod = 0.0;
+    double prod;
     for (local_i = 0; local_i < local_n; local_i++)
-        local_z[local_i] = local_x[local_i] + local_y[local_i];
-} /* Parallel_vector_sum */
+    {
+        local_prod += local_x[local_i] * local_y[local_i];
+    }
+    MPI_Reduce(&local_prod, &prod, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    if (my_rank == 0)
+    {
+        printf("Producto punto: %f\n", prod);
+    }
+    return local_prod;
+} /* Parallel_vector_dot */
