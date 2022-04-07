@@ -16,7 +16,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#define MIN_ELEMENTS 100000000
+#define MIN_ELEMENTS 90000000
 // If it is set to true it wont ask for the size of the array
 #define DEBUG 1
 

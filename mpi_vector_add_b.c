@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
-#define MIN_ELEMENTS 100000000
+#define MIN_ELEMENTS 90000000
 // If it is set to true it wont ask for the size of the array
 #define DEBUG 1
 
@@ -163,7 +163,7 @@ void Read_n(
     if (*n_p < MIN_ELEMENTS || *n_p % comm_sz != 0)
         local_ok = 0;
     Check_for_error(local_ok, fname,
-                    "n should be >= 100000000 and evenly divisible by comm_sz", comm);
+                    "n should be >= 90000000 and evenly divisible by comm_sz", comm);
     *local_n_p = *n_p / comm_sz;
 } /* Read_n */
 
